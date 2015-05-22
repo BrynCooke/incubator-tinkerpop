@@ -18,6 +18,9 @@
  */
 package org.apache.tinkerpop.gremlin.util;
 
+import org.apache.tinkerpop.gremlin.structure.io.object.LambdaObjectInputStream;
+import org.apache.tinkerpop.gremlin.structure.io.object.LambdaObjectOutputStream;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,7 +37,7 @@ public final class Serializer {
 
     public static byte[] serializeObject(final Object object) throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        final ObjectOutputStream out = new ObjectOutputStream(outputStream);
+        final ObjectOutputStream out = new LambdaObjectOutputStream(outputStream);
         out.writeObject(object);
         out.close();
         return outputStream.toByteArray();
@@ -42,7 +45,7 @@ public final class Serializer {
 
     public static Object deserializeObject(final byte[] objectBytes) throws IOException, ClassNotFoundException {
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(objectBytes);
-        final ObjectInputStream in = new ObjectInputStream(inputStream);
+        final ObjectInputStream in = new LambdaObjectInputStream(inputStream);
         final Object object = in.readObject();
         in.close();
         return object;

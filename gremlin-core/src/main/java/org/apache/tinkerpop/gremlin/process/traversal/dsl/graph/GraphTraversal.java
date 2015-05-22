@@ -170,7 +170,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
 
     ///////////////////// MAP STEPS /////////////////////
 
-    public default <E2> GraphTraversal<S, E2> map(final Function<Traverser<E>, E2> function) {
+    public default <E2> GraphTraversal<S, E2> map(final SFunction<Traverser<E>, E2> function) {
         return this.asAdmin().addStep(new LambdaMapStep<>(this.asAdmin(), function));
     }
 

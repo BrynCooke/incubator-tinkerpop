@@ -60,7 +60,7 @@ public class __ {
 
     ///////////////////// MAP STEPS /////////////////////
 
-    public static <A, B> GraphTraversal<A, B> map(final Function<Traverser<A>, B> function) {
+    public static <A, B> GraphTraversal<A, B> map(final SFunction<Traverser<A>, B> function) {
         return __.<A>start().map(function);
     }
 
