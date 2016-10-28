@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.RequirementsStep;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ExceptionHandlingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,6 +73,7 @@ public class StandardVerificationStrategyTest {
     @Test
     public void shouldBeVerified() {
         final TraversalStrategies strategies = new DefaultTraversalStrategies();
+        strategies.addStrategies(ExceptionHandlingStrategy.instance());
         strategies.addStrategies(StandardVerificationStrategy.instance());
         traversal.asAdmin().setStrategies(strategies);
 

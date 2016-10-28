@@ -27,6 +27,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ExceptionHandlingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.FilterRankingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.InlineFilterStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.LazyBarrierStrategy;
@@ -76,6 +77,11 @@ public class TinkerGraphStepStrategyTest {
         for (final TraversalStrategy strategy : this.otherStrategies) {
             strategies.addStrategies(strategy);
         }
+
+        if(otherStrategies.contains(ExceptionHandlingStrategy.instance())) {
+            this.optimized.asAdmin().addStep(new ExceptionHandlingStrategy.ExceptionHandlingStep(this.optimized.asAdmin()));
+        }
+
         this.original.asAdmin().setStrategies(strategies);
         this.original.asAdmin().applyStrategies();
         assertEquals(this.optimized, this.original);

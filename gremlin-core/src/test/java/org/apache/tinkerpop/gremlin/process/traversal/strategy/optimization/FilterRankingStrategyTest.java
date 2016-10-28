@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ExceptionHandlingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.junit.Test;
@@ -69,9 +70,15 @@ public class FilterRankingStrategyTest {
     public void doTest() {
         final TraversalStrategies strategies = new DefaultTraversalStrategies();
         strategies.addStrategies(FilterRankingStrategy.instance());
+
         for (final TraversalStrategy strategy : this.otherStrategies) {
             strategies.addStrategies(strategy);
         }
+
+        if(otherStrategies.contains(ExceptionHandlingStrategy.instance())) {
+            this.optimized.asAdmin().addStep(new ExceptionHandlingStrategy.ExceptionHandlingStep(this.optimized.asAdmin()));
+        }
+
         this.original.asAdmin().setStrategies(strategies);
         this.original.asAdmin().applyStrategies();
         assertEquals(this.optimized, this.original);

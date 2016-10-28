@@ -29,6 +29,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilte
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ExceptionHandlingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.InlineFilterStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.verification.StandardVerificationStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
@@ -77,10 +78,12 @@ public class SubgraphStrategyTest {
                     edges(hasLabel("knows")).
                     vertexProperties(__.<VertexProperty, Long>values().count().and(is(P.lt(10)), is(0))).create());
             originalStrategies.addStrategies(InlineFilterStrategy.instance());
+            originalStrategies.addStrategies(ExceptionHandlingStrategy.instance());
             originalStrategies.addStrategies(StandardVerificationStrategy.instance());
             this.original.asAdmin().setStrategies(originalStrategies);
             this.original.asAdmin().applyStrategies();
             final TraversalStrategies optimizedStrategies = new DefaultTraversalStrategies();
+            optimizedStrategies.addStrategies(ExceptionHandlingStrategy.instance());
             optimizedStrategies.addStrategies(InlineFilterStrategy.instance());
             this.optimized.asAdmin().setStrategies(optimizedStrategies);
             this.optimized.asAdmin().applyStrategies();
@@ -143,7 +146,7 @@ public class SubgraphStrategyTest {
         public void shouldNotRetainMarkers() {
             final SubgraphStrategy strategy = SubgraphStrategy.build().vertices(__.<Vertex>out().hasLabel("person")).create();
             final Traversal.Admin<?, ?> t = out().inE().asAdmin();
-            t.setStrategies(t.getStrategies().clone().addStrategies(strategy, StandardVerificationStrategy.instance()));
+            t.setStrategies(t.getStrategies().clone().addStrategies(strategy, ExceptionHandlingStrategy.instance(), StandardVerificationStrategy.instance()));
             t.applyStrategies();
             assertEquals(t.getSteps().get(0).getClass(), VertexStep.class);
             assertEquals(t.getSteps().get(1).getClass(), TraversalFilterStep.class);

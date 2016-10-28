@@ -25,13 +25,14 @@ import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.ProfileSideEffectStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SideEffectCapStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ReducingBarrierStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.RequirementsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ExceptionHandlingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 
@@ -61,16 +62,25 @@ public final class StandardVerificationStrategy extends AbstractTraversalStrateg
                 throw new VerificationException("The parent of a reducing barrier can not be repeat()-step: " + step, traversal);
         }
 
-        // The ProfileSideEffectStep must be the last step, 2nd last step when accompanied by the cap step,
-        // or 3rd to last when the traversal ends with a RequirementsStep.
-        final Step<?, ?> endStep = traversal.asAdmin().getEndStep();
+
+        //The last step of a top level traversal will always be an exception handling step.
+        Step<?, ?> endStep = traversal.asAdmin().getEndStep();
+        if (traversal.getParent() == EmptyStep.instance()) {
+            if (!(endStep instanceof ExceptionHandlingStrategy.ExceptionHandlingStep)) {
+                throw new VerificationException("Missing exception handling step" + traversal, traversal);
+            }
+            endStep = endStep.getPreviousStep();
+        }
+
+        // Ignoring the exception handling step, the ProfileSideEffectStep must be the last step, 2rd last step when accompanied by the cap step,
+        // or 3th to last when the traversal ends with a RequirementsStep.
         if (TraversalHelper.hasStepOfClass(ProfileSideEffectStep.class, traversal) &&
                 !(endStep instanceof ProfileSideEffectStep ||
                         (endStep instanceof SideEffectCapStep && endStep.getPreviousStep() instanceof ProfileSideEffectStep) ||
                         (endStep instanceof RequirementsStep && (
                                 endStep.getPreviousStep() instanceof SideEffectCapStep ||
                                         endStep.getPreviousStep() instanceof ProfileSideEffectStep)))) {
-            throw new VerificationException("When specified, the profile()-Step must be the last step or followed only by the cap()-step and/or requirements step.", traversal);
+            throw new VerificationException("When specified, the profile()-Step must be the last step or followed only by the cap()-step and/or requirements step." + traversal, traversal);
         }
 
         if (TraversalHelper.getStepsOfClass(ProfileSideEffectStep.class, traversal).size() > 1) {
